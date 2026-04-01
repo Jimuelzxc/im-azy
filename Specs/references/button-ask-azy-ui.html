@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Azy Button</title>
+    <!-- Importing fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            /* Basic resets and center display for testing */
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #121212; /* Dark background to see the item better */
+            min-height: 100vh;
+        }
+
+        .AskAzyButton {
+            all: unset; /* Reset primary button styles */
+            box-sizing: border-box;
+            background: #272727;
+            border-radius: 16px; /* Cleaned up from 16.313px */
+            display: inline-flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 6px; /* Adjusted from 1px to look more natural with text */
+            height: 32px; /* Set a reasonable real-world height */
+            padding: 0 16px 0 12px; /* Realistic horizontal padding */
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            overflow: hidden;
+        }
+
+        .AskAzyButton:hover {
+            background: #333333; /* Added hover state */
+        }
+        
+        .AskAzyButton:active {
+            transform: scale(0.97); /* Added active state */
+        }
+
+        .generated-icon {
+            color: #d07cf0;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 18px; /* Cleaned up from 15.337px */
+            font-weight: 700;
+            line-height: 1;
+            /* Adjusting visual center alignment */
+            transform: translateY(2px);
+        }
+
+        .AskAzy-text {
+            color: #fff;
+            letter-spacing: -0.5px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px; /* Increased from scaled 7.25px to practical UI size */
+            font-weight: 500;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <button class="AskAzyButton" type="button" aria-label="Ask Azy">
+        <span class="generated-icon" aria-hidden="true">*</span>
+        <span class="AskAzy-text">Ask azy</span>
+    </button>
+</body>
+</html>
