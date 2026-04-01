@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Panel</title>
+
+    <!-- Import Roboto Mono to match the Figma design -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* CSS Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* Background added just for presentation purposes */
+            background-color: #0d0d0d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Roboto Mono', monospace;
+            color: #ffffff;
+        }
+
+        /* Main Container */
+        .settings-panel {
+            background: #1e1e1e;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            width: 100%;
+            max-width: 320px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header */
+        .settings-header {
+            background: #292929;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .icon-btn:hover {
+            color: #ffffff;
+        }
+
+        .settings-title {
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: -0.32px;
+        }
+
+        /* Tabs Navigation */
+        .settings-tabs {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 13px;
+            padding: 12px 0;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .tab:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .tab.active {
+            color: #ffffff;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #b15fd0;
+        }
+
+        /* Form Styles */
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 0 20px 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            color: #ffffff;
+            letter-spacing: -0.32px;
+        }
+
+        /* Inputs & Textareas */
+        .form-group input,
+        .form-group textarea {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px 12px;
+            color: #ffffff;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #b15fd0;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+            letter-spacing: -0.24px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <section class="settings-panel">
+        <!-- Header -->
+        <header class="settings-header">
+            <button class="icon-btn" aria-label="Go back">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6" />
+                </svg>
+            </button>
+            <h1 class="settings-title">Settings</h1>
+            <button class="icon-btn" aria-label="Close settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+            </button>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="settings-tabs">
+            <button class="tab active">model</button>
+            <button class="tab">soon</button>
+            <button class="tab">soon</button>
+        </nav>
+
+        <!-- Settings Form -->
+        <form class="settings-form" action="#" method="POST">
+            <div class="form-group">
+                <label for="model-name">Model name</label>
+                <input type="text" id="model-name" placeholder="eg. model/model-2.7" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="url-endpoint">Url (End point)</label>
+                <input type="url" id="url-endpoint" placeholder="eg. https://website.ai/api/v1/chat/completions">
+            </div>
+
+            <div class="form-group">
+                <label for="api-key">Api Key</label>
+                <input type="password" id="api-key" placeholder="eg. AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe"
+                    autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="custom-prompts">Custom prompts (Optional)</label>
+                <textarea id="custom-prompts" placeholder="Enter custom prompts here..."></textarea>
+            </div>
+        </form>
+    </section>
+
+</body>
+
+</html>

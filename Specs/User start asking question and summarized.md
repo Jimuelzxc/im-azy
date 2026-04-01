@@ -2,7 +2,7 @@ Goals: User asking about the video ai start summarizing.
 
 
 - Allow user to use any llm provier that openai-compatible eg. openrouter etc.
-- First user should input an api key, model name and url and click save, once is done.
+- First in settings panel ui heres the ui `references/settings-panel-ui.html`, user should input an api key, model name and url and click save, once is done.
 I'll examine the repository to understand how the app fetches transcripts.Let me search for the transcript fetching logic in the code:# How to get a transcript.
 
 ## Step 1: Check if transcript is already visible
