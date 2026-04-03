@@ -28,13 +28,13 @@ function createChatPanel(floatingButton) {
           <input type="text" placeholder="ask a question..." aria-label="Ask a question" autocomplete="off">
         </div>
         <div class="azy-input-bottom-row">
-          <button type="submit" class="azy-send-btn" aria-label="Send message">&gt;</button>
           <button type="button" class="azy-settings-btn" aria-label="Settings">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
           </button>
+          <button type="submit" class="azy-send-btn" aria-label="Send message">&gt;</button>
         </div>
       </form>
     </div>
@@ -187,7 +187,27 @@ function createChatPanel(floatingButton) {
     const msg = document.createElement('div');
     msg.className = `azy-message azy-message-${type}`;
     if (type === 'azy') {
+      msg.dataset.rawText = text;
+      msg.style.position = 'relative';
       msg.innerHTML = renderMarkdown(text);
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'azy-copy-btn';
+      copyBtn.setAttribute('aria-label', 'Copy response');
+      copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+      copyBtn.addEventListener('click', () => {
+        const rawText = msg.dataset.rawText;
+        navigator.clipboard.writeText(rawText).then(() => {
+          const tooltip = document.createElement('span');
+          tooltip.className = 'azy-copy-tooltip';
+          tooltip.textContent = 'Copied';
+          copyBtn.appendChild(tooltip);
+          setTimeout(() => {
+            tooltip.classList.add('azy-copy-fade');
+            setTimeout(() => tooltip.remove(), 300);
+          }, 1500);
+        }).catch(() => {});
+      });
+      msg.appendChild(copyBtn);
     } else {
       msg.textContent = text;
     }
@@ -218,19 +238,147 @@ function createChatPanel(floatingButton) {
     chatContent.scrollTop = chatContent.scrollHeight;
   }
 
+  let conversationHistory = [];
+
+  const COMMANDS = {
+    clear: {
+      description: 'Clear the chat',
+      handler: () => {
+        chatContent.innerHTML = '';
+        conversationHistory = [];
+        const note = document.createElement('div');
+        note.className = 'azy-system-note';
+        note.textContent = 'Chat cleared';
+        chatContent.appendChild(note);
+        chatContent.appendChild(greetingSection.cloneNode(true));
+        const newSuggestionBtn = chatContent.querySelector('.azy-suggestion-btn');
+        if (newSuggestionBtn) {
+          newSuggestionBtn.addEventListener('click', () => {
+            const suggestion = newSuggestionBtn.dataset.suggestion;
+            inputField.value = suggestion;
+            inputForm.dispatchEvent(new Event('submit'));
+          });
+        }
+      },
+    },
+  };
+
+  // Command palette
+  const commandPalette = document.createElement('div');
+  commandPalette.className = 'azy-command-palette azy-hidden';
+  panel.appendChild(commandPalette);
+  let selectedIndex = 0;
+
+  function showCommandPalette(filter) {
+    commandPalette.innerHTML = '';
+    selectedIndex = 0;
+    const matches = Object.entries(COMMANDS).filter(([name]) =>
+      name.startsWith(filter.toLowerCase())
+    );
+    if (matches.length === 0) {
+      commandPalette.classList.add('azy-hidden');
+      return;
+    }
+    matches.forEach(([name, cmd]) => {
+      const item = document.createElement('div');
+      item.className = 'azy-command-item';
+      item.innerHTML = `<span class="azy-command-name">/${name}</span><span class="azy-command-desc">${cmd.description}</span>`;
+      item.addEventListener('click', () => {
+        cmd.handler();
+        inputField.value = '';
+        hideCommandPalette();
+      });
+      commandPalette.appendChild(item);
+    });
+    updateSelection();
+    commandPalette.classList.remove('azy-hidden');
+  }
+
+  function hideCommandPalette() {
+    commandPalette.classList.add('azy-hidden');
+    commandPalette.innerHTML = '';
+    selectedIndex = 0;
+  }
+
+  function updateSelection() {
+    const items = commandPalette.querySelectorAll('.azy-command-item');
+    items.forEach((item, i) => {
+      item.classList.toggle('azy-command-selected', i === selectedIndex);
+    });
+  }
+
+  inputField.addEventListener('input', () => {
+    const value = inputField.value.trim();
+    if (value.startsWith('/')) {
+      showCommandPalette(value.slice(1).trim());
+    } else {
+      hideCommandPalette();
+    }
+  });
+
+  inputField.addEventListener('keydown', (e) => {
+    const items = commandPalette.querySelectorAll('.azy-command-item');
+    if (!commandPalette.classList.contains('azy-hidden') && items.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % items.length;
+        updateSelection();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+        updateSelection();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const selectedItem = items[selectedIndex];
+        const cmdName = selectedItem.querySelector('.azy-command-name').textContent.slice(1);
+        if (cmdName && COMMANDS[cmdName]) {
+          COMMANDS[cmdName].handler();
+          inputField.value = '';
+          hideCommandPalette();
+        }
+      } else if (e.key === 'Escape') {
+        hideCommandPalette();
+      }
+    } else if (e.key === 'Escape') {
+      hideCommandPalette();
+    }
+  });
+
   inputForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const query = inputField.value.trim();
     if (!query) return;
 
+    hideCommandPalette();
+
+    if (query.startsWith('/')) {
+      const cmdName = query.slice(1).trim().toLowerCase();
+      if (COMMANDS[cmdName]) {
+        COMMANDS[cmdName].handler();
+        inputField.value = '';
+        return;
+      }
+      showError(`Unknown command: ${cmdName}`);
+      inputField.value = '';
+      return;
+    }
+
     inputField.value = '';
     addMessage(query, 'user');
 
-    const transcript = await getTranscriptForVideo();
-    if (!transcript) {
-      showError('This video doesn\'t have a transcript available.');
-      return;
+    if (conversationHistory.length === 0) {
+      const transcript = await getTranscriptForVideo();
+      if (!transcript) {
+        showError('This video doesn\'t have a transcript available.');
+        return;
+      }
+      conversationHistory.push({
+        role: 'system',
+        content: 'You are Azy, a video summarization and Q&A assistant. You help users understand YouTube videos by answering questions based on the provided transcript. Be concise, helpful, and reference timestamps when relevant.\n\nVideo transcript:\n' + transcript,
+      });
     }
+
+    conversationHistory.push({ role: 'user', content: query });
 
     let settings;
     try {
@@ -261,8 +409,7 @@ function createChatPanel(floatingButton) {
     try {
       const response = await browser.runtime.sendMessage({
         type: 'chat',
-        query,
-        transcript,
+        messages: conversationHistory,
         settings,
       });
 
@@ -278,6 +425,7 @@ function createChatPanel(floatingButton) {
         showError(messages[response.error] || response.message || 'An unexpected error occurred.');
       } else {
         addMessage(response.data, 'azy');
+        conversationHistory.push({ role: 'assistant', content: response.data });
       }
     } catch (e) {
       removeLoading();
