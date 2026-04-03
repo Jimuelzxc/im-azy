@@ -17,7 +17,7 @@ function createChatPanel(floatingButton) {
         <pre class="azy-ghost-ascii" aria-hidden="true"></pre>
         <p class="azy-greeting-text">Hello! Curious about what you're watching? I'm here to help.</p>
         <div class="azy-suggestion-buttons">
-          <button class="azy-suggestion-btn" data-suggestion="summarize the video">summarize the video</button>
+          <button type="button" class="azy-suggestion-btn" data-suggestion="summarize the video">summarize the video</button>
         </div>
       </div>
     </main>
@@ -53,25 +53,31 @@ function createChatPanel(floatingButton) {
   const greetingSection = panel.querySelector('.azy-greeting-message');
   const ghostAscii = panel.querySelector('.azy-ghost-ascii');
 
+  let isStreaming = false;
+  let streamingPort = null;
+  let streamingMessageEl = null;
+  let streamingText = '';
+  let editingMessageIndex = null;
+  let editingOriginalContent = null;
+
   // Auto-expand textarea
   inputField.addEventListener('input', () => {
     inputField.style.height = 'auto';
     inputField.style.height = Math.min(inputField.scrollHeight, 120) + 'px';
   });
 
-  // ASCII ghost animation
-  const ghostFrames = [
-    '  .-"""-. \n /       \\\n|  O   O  |\n|    ^    |\n \\  \'-\'  / \n  \'-----\'  ',
-    '  .-"""-. \n /       \\\n|  O   O  |\n|    ^    |\n \\  \'-\'  / \n  \'--=--\'  ',
-    '  .-"""-. \n /       \\\n|  O   O  |\n|    ^    |\n \\  \'-\'  / \n  \'-----\'  ',
-    '  .-"""-. \n /       \\\n|  -   -  |\n|    ^    |\n \\  \'-\'  / \n  \'--=--\'  ',
+  // ASCII Haunter animation
+  const haunterFrames = [
+    ' .---. \n| -_- |\n \'---\' ',
+    ' .---. \n| -_- |\n \'---\' ',
+    ' .---. \n| - - |\n \'---\' ',
   ];
-  let ghostFrame = 0;
+  let haunterFrame = 0;
   if (ghostAscii) {
-    ghostAscii.textContent = ghostFrames[0];
+    ghostAscii.textContent = haunterFrames[0];
     setInterval(() => {
-      ghostFrame = (ghostFrame + 1) % ghostFrames.length;
-      ghostAscii.textContent = ghostFrames[ghostFrame];
+      haunterFrame = (haunterFrame + 1) % haunterFrames.length;
+      ghostAscii.textContent = haunterFrames[haunterFrame];
     }, 800);
   }
 
@@ -232,7 +238,27 @@ function createChatPanel(floatingButton) {
       });
       msg.appendChild(copyBtn);
     } else {
-      msg.textContent = text;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'azy-message-wrapper';
+      wrapper.style.position = 'relative';
+      const textSpan = document.createElement('span');
+      textSpan.textContent = text;
+      wrapper.appendChild(textSpan);
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'azy-edit-btn';
+      editBtn.setAttribute('aria-label', 'Edit message');
+      editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+      editBtn.addEventListener('click', () => {
+        const msgElements = chatContent.querySelectorAll('.azy-message-user');
+        const allUserMsgs = Array.from(msgElements);
+        const idx = allUserMsgs.indexOf(msg);
+        if (idx >= 0) {
+          startEditing(idx);
+        }
+      });
+      wrapper.appendChild(editBtn);
+      msg.appendChild(wrapper);
     }
     chatContent.appendChild(msg);
     chatContent.scrollTop = chatContent.scrollHeight;
@@ -281,6 +307,7 @@ function createChatPanel(floatingButton) {
     clear: {
       description: 'Clear the chat',
       handler: () => {
+        if (editingMessageIndex !== null) cancelEditing();
         chatContent.innerHTML = '';
         conversationHistory = [];
         const note = document.createElement('div');
@@ -293,7 +320,7 @@ function createChatPanel(floatingButton) {
           newSuggestionBtn.addEventListener('click', () => {
             const suggestion = newSuggestionBtn.dataset.suggestion;
             inputField.value = suggestion;
-            inputForm.dispatchEvent(new Event('submit'));
+            inputForm.dispatchEvent(new Event('submit', { cancelable: true }));
           });
         }
       },
@@ -385,6 +412,306 @@ function createChatPanel(floatingButton) {
     }
   });
 
+  function setInputDisabled(disabled) {
+    const sendBtn = inputForm.querySelector('.azy-send-btn');
+    const settingsBtnEl = inputForm.querySelector('.azy-settings-btn');
+    if (sendBtn) sendBtn.disabled = disabled;
+    if (settingsBtnEl) settingsBtnEl.disabled = disabled;
+    inputField.disabled = disabled;
+  }
+
+  async function startStreaming() {
+    if (conversationHistory.length === 0) return;
+    if (isStreaming) return;
+
+    setInputDisabled(true);
+
+    let settings;
+    try {
+      const stored = await browser.storage.local.get('azy_settings');
+      settings = stored.azy_settings || {};
+    } catch (e) {
+      console.error('Azy: failed to load settings', e);
+      showError('Failed to load settings. Try refreshing the page.');
+      setInputDisabled(false);
+      return;
+    }
+
+    if (!settings.apiKey) {
+      showError('Set up your API key in Settings to get started.');
+      setInputDisabled(false);
+      return;
+    }
+
+    if (!settings.url) {
+      showError('Set up the API URL in Settings to get started.');
+      setInputDisabled(false);
+      return;
+    }
+
+    if (!settings.modelName) {
+      showError('Set up the model name in Settings to get started.');
+      setInputDisabled(false);
+      return;
+    }
+
+    isStreaming = true;
+    streamingText = '';
+    streamingMessageEl = document.createElement('div');
+    streamingMessageEl.className = 'azy-message azy-message-azy azy-streaming-message';
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'azy-streaming-content azy-streaming-cursor';
+    streamingMessageEl.appendChild(contentDiv);
+    chatContent.appendChild(streamingMessageEl);
+    chatContent.scrollTop = chatContent.scrollHeight;
+
+    try {
+      streamingPort = browser.runtime.connect({ name: 'chat-stream' });
+
+      streamingPort.postMessage({ messages: conversationHistory, settings });
+
+      streamingPort.onMessage.addListener((msg) => {
+        if (msg.type === 'chunk') {
+          streamingText += msg.text;
+          contentDiv.innerHTML = renderMarkdown(streamingText);
+          chatContent.scrollTop = chatContent.scrollHeight;
+        } else if (msg.type === 'done') {
+          finalizeStreaming();
+        } else if (msg.type === 'error') {
+          abortStreaming();
+          const errorMessages = {
+            'invalid_api_key': 'Invalid API key. Check your settings.',
+            'rate_limited': 'Rate limited. Please try again later.',
+            'server_error': 'The AI service encountered an error. Try again.',
+            'network_error': 'Connection failed. Check your internet.',
+          };
+          const errorMsg = errorMessages[msg.error] || msg.message || 'An unexpected error occurred.';
+          showError(errorMsg, () => startStreaming());
+        }
+      });
+
+      streamingPort.onDisconnect.addListener(() => {
+        if (isStreaming && !streamingText) {
+          abortStreaming();
+          if (streamingMessageEl) {
+            streamingMessageEl.remove();
+            streamingMessageEl = null;
+          }
+          showError('Connection lost. Retrying...', () => startStreaming());
+        }
+        streamingPort = null;
+      });
+    } catch (e) {
+      abortStreaming();
+      console.error('Azy: streaming connection failed', e);
+      showError('Connection failed. Check your internet.', () => startStreaming());
+    }
+  }
+
+  function finalizeStreaming() {
+    isStreaming = false;
+    if (streamingMessageEl) {
+      const contentDiv = streamingMessageEl.querySelector('.azy-streaming-content');
+      if (contentDiv) {
+        contentDiv.classList.remove('azy-streaming-cursor');
+      }
+      streamingMessageEl.dataset.rawText = streamingText;
+      streamingMessageEl.style.position = 'relative';
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'azy-copy-btn';
+      copyBtn.setAttribute('aria-label', 'Copy response');
+      copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+      copyBtn.addEventListener('click', () => {
+        const rawText = streamingMessageEl.dataset.rawText;
+        navigator.clipboard.writeText(rawText).then(() => {
+          const tooltip = document.createElement('span');
+          tooltip.className = 'azy-copy-tooltip';
+          tooltip.textContent = 'Copied';
+          copyBtn.appendChild(tooltip);
+          setTimeout(() => {
+            tooltip.classList.add('azy-copy-fade');
+            setTimeout(() => tooltip.remove(), 300);
+          }, 1500);
+        }).catch(() => {});
+      });
+      streamingMessageEl.appendChild(copyBtn);
+    }
+    conversationHistory.push({ role: 'assistant', content: streamingText });
+    streamingMessageEl = null;
+    streamingText = '';
+    setInputDisabled(false);
+  }
+
+  function abortStreaming() {
+    isStreaming = false;
+    if (streamingPort) {
+      try { streamingPort.disconnect(); } catch (e) {}
+      streamingPort = null;
+    }
+    if (streamingMessageEl) {
+      streamingMessageEl.remove();
+      streamingMessageEl = null;
+    }
+    streamingText = '';
+    setInputDisabled(false);
+  }
+
+  function startEditing(messageIndex) {
+    if (isStreaming) return;
+    if (editingMessageIndex !== null) return;
+
+    const userMsg = conversationHistory[messageIndex];
+    if (!userMsg || userMsg.role !== 'user') return;
+
+    editingMessageIndex = messageIndex;
+    editingOriginalContent = userMsg.content;
+
+    const msgElements = chatContent.querySelectorAll('.azy-message-user');
+    const msg = msgElements[messageIndex];
+    if (!msg) return;
+
+    msg.classList.add('azy-message-editing');
+    const wrapper = msg.querySelector('.azy-message-wrapper');
+    if (!wrapper) return;
+
+    wrapper.innerHTML = '';
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'azy-edit-textarea';
+    textarea.value = userMsg.content;
+    textarea.rows = 3;
+    wrapper.appendChild(textarea);
+
+    const actions = document.createElement('div');
+    actions.className = 'azy-edit-actions';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'azy-edit-save-btn';
+    saveBtn.textContent = 'Save';
+    saveBtn.addEventListener('click', () => saveEditing());
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'azy-edit-cancel-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => cancelEditing());
+
+    actions.appendChild(saveBtn);
+    actions.appendChild(cancelBtn);
+    wrapper.appendChild(actions);
+
+    textarea.focus();
+    textarea.select();
+
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        saveEditing();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelEditing();
+      }
+    });
+  }
+
+  function saveEditing() {
+    if (editingMessageIndex === null) return;
+
+    const msgElements = chatContent.querySelectorAll('.azy-message-user');
+    const msg = msgElements[editingMessageIndex];
+    if (!msg) {
+      cancelEditing();
+      return;
+    }
+
+    const textarea = msg.querySelector('.azy-edit-textarea');
+    if (!textarea) {
+      cancelEditing();
+      return;
+    }
+
+    const newText = textarea.value.trim();
+    if (!newText) {
+      textarea.style.borderColor = '#ff6b6b';
+      return;
+    }
+
+    const editedIndex = editingMessageIndex;
+
+    conversationHistory = conversationHistory.slice(0, editedIndex + 1);
+    conversationHistory[editedIndex].content = newText;
+
+    const allMessages = chatContent.querySelectorAll('.azy-message');
+    for (let i = allMessages.length - 1; i > editedIndex; i--) {
+      allMessages[i].remove();
+    }
+
+    msg.classList.remove('azy-message-editing');
+    const wrapper = msg.querySelector('.azy-message-wrapper');
+    if (wrapper) {
+      wrapper.innerHTML = '';
+      const textSpan = document.createElement('span');
+      textSpan.textContent = newText;
+      wrapper.appendChild(textSpan);
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'azy-edit-btn';
+      editBtn.setAttribute('aria-label', 'Edit message');
+      editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+      editBtn.addEventListener('click', () => {
+        const msgElements = chatContent.querySelectorAll('.azy-message-user');
+        const allUserMsgs = Array.from(msgElements);
+        const idx = allUserMsgs.indexOf(msg);
+        if (idx >= 0) {
+          startEditing(idx);
+        }
+      });
+      wrapper.appendChild(editBtn);
+    }
+
+    editingMessageIndex = null;
+    editingOriginalContent = null;
+
+    chatContent.scrollTop = chatContent.scrollHeight;
+
+    startStreaming();
+  }
+
+  function cancelEditing() {
+    if (editingMessageIndex === null) return;
+
+    const msgElements = chatContent.querySelectorAll('.azy-message-user');
+    const msg = msgElements[editingMessageIndex];
+    if (msg) {
+      msg.classList.remove('azy-message-editing');
+      const wrapper = msg.querySelector('.azy-message-wrapper');
+      if (wrapper) {
+        const textSpan = wrapper.querySelector('span');
+        if (textSpan) {
+          textSpan.textContent = editingOriginalContent;
+        }
+        const existingEditBtn = wrapper.querySelector('.azy-edit-btn');
+        if (!existingEditBtn) {
+          const editBtn = document.createElement('button');
+          editBtn.className = 'azy-edit-btn';
+          editBtn.setAttribute('aria-label', 'Edit message');
+          editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+          editBtn.addEventListener('click', () => {
+            const msgElements = chatContent.querySelectorAll('.azy-message-user');
+            const allUserMsgs = Array.from(msgElements);
+            const idx = allUserMsgs.indexOf(msg);
+            if (idx >= 0) {
+              startEditing(idx);
+            }
+          });
+          wrapper.appendChild(editBtn);
+        }
+      }
+    }
+
+    editingMessageIndex = null;
+    editingOriginalContent = null;
+  }
+
   async function sendToAPI(retryCount) {
     if (conversationHistory.length === 0) return;
 
@@ -425,14 +752,14 @@ function createChatPanel(floatingButton) {
       removeLoading();
 
       if (response.error) {
-        const messages = {
+        const errorMessages = {
           'invalid_api_key': 'Invalid API key. Check your settings.',
           'rate_limited': 'Rate limited. Please try again later.',
           'server_error': 'The AI service encountered an error. Try again.',
           'network_error': 'Connection failed. Check your internet.',
         };
-        const errorMsg = messages[response.error] || response.message || 'An unexpected error occurred.';
-        showError(errorMsg, () => sendToAPI((retryCount || 0) + 1));
+        const errorMsg = errorMessages[response.error] || response.message || 'An unexpected error occurred.';
+        showError(errorMsg, () => startStreaming());
       } else {
         addMessage(response.data, 'azy');
         conversationHistory.push({ role: 'assistant', content: response.data });
@@ -440,14 +767,14 @@ function createChatPanel(floatingButton) {
     } catch (e) {
       removeLoading();
       console.error('Azy: message send failed', e);
-      showError('Connection failed. Check your internet.', () => sendToAPI((retryCount || 0) + 1));
+      showError('Connection failed. Check your internet.', () => startStreaming());
     }
   }
 
-  inputForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  async function handleSubmit() {
     const query = inputField.value.trim();
     if (!query) return;
+    if (isStreaming) return;
 
     hideCommandPalette();
 
@@ -481,15 +808,23 @@ function createChatPanel(floatingButton) {
 
     conversationHistory.push({ role: 'user', content: query });
 
-    await sendToAPI(0);
+    await startStreaming();
+  }
+
+  inputForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await handleSubmit();
   });
 
   const suggestionBtn = panel.querySelector('.azy-suggestion-btn');
   if (suggestionBtn) {
-    suggestionBtn.addEventListener('click', () => {
+    suggestionBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
       const suggestion = suggestionBtn.dataset.suggestion;
       inputField.value = suggestion;
-      inputForm.dispatchEvent(new Event('submit'));
+      handleSubmit();
     });
   }
 
