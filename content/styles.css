@@ -554,3 +554,136 @@
   align-self: flex-start;
   max-width: 90%;
 }
+
+/* Command Palette */
+.azy-command-palette {
+  position: absolute;
+  bottom: 80px;
+  left: 16px;
+  right: 16px;
+  background: #292929;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.azy-command-palette.azy-hidden {
+  display: none;
+}
+
+.azy-command-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.azy-command-item:last-child {
+  border-bottom: none;
+}
+
+.azy-command-item:hover,
+.azy-command-item.azy-command-selected {
+  background: rgba(208, 124, 240, 0.1);
+}
+
+.azy-command-name {
+  color: var(--azy-accent-purple);
+  font-family: var(--azy-font-main);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.azy-command-desc {
+  color: var(--azy-text-secondary);
+  font-family: var(--azy-font-main);
+  font-size: 10px;
+}
+
+/* System Note */
+.azy-system-note {
+  color: var(--azy-text-secondary);
+  font-size: 10px;
+  text-align: center;
+  padding: 4px 0;
+  align-self: center;
+}
+
+/* Copy Button */
+.azy-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  color: var(--azy-text-secondary);
+}
+
+.azy-message-azy:hover .azy-copy-btn {
+  opacity: 1;
+}
+
+.azy-copy-btn:hover {
+  color: var(--azy-accent-purple);
+}
+
+.azy-copy-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.azy-copy-tooltip {
+  position: absolute;
+  top: -24px;
+  right: 0;
+  background: #333;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.azy-copy-tooltip.azy-copy-fade {
+  opacity: 0;
+}
+
+/* Retry Button */
+.azy-retry-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff6b6b;
+  vertical-align: middle;
+  transition: color 0.2s;
+}
+
+.azy-retry-btn:hover {
+  color: var(--azy-accent-purple);
+}
+
+.azy-retry-btn svg {
+  width: 14px;
+  height: 14px;
+}
