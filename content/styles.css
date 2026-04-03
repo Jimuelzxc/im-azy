@@ -699,3 +699,114 @@
   width: 14px;
   height: 14px;
 }
+
+/* Streaming */
+.azy-streaming-message {
+  position: relative;
+}
+
+.azy-streaming-cursor::after {
+  content: '\258A';
+  animation: azy-cursor-blink 1s step-end infinite;
+  color: var(--azy-accent-purple);
+  margin-left: 2px;
+}
+
+@keyframes azy-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Edit Button */
+.azy-edit-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  color: var(--azy-text-secondary);
+}
+
+.azy-message-user:hover .azy-edit-btn {
+  opacity: 1;
+}
+
+.azy-edit-btn:hover {
+  color: var(--azy-accent-purple);
+}
+
+.azy-edit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Edit Mode */
+.azy-edit-textarea {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--azy-accent-purple-dark);
+  border-radius: 4px;
+  color: var(--azy-text-primary);
+  font-family: var(--azy-font-main);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  width: 100%;
+  min-height: 60px;
+  resize: vertical;
+  outline: none;
+}
+
+.azy-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.azy-edit-save-btn {
+  background: var(--azy-accent-purple);
+  color: var(--azy-bg-panel);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-family: var(--azy-font-main);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.azy-edit-save-btn:hover {
+  background: var(--azy-accent-purple-dark);
+}
+
+.azy-edit-cancel-btn {
+  background: transparent;
+  color: var(--azy-text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-family: var(--azy-font-main);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.azy-edit-cancel-btn:hover {
+  color: var(--azy-text-primary);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.azy-message-editing {
+  background: rgba(208, 124, 240, 0.05);
+  border: 1px solid rgba(208, 124, 240, 0.2);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
