@@ -230,15 +230,29 @@ function createChatPanel(floatingButton) {
     if (loading) loading.remove();
   }
 
-  function showError(message) {
+  function showError(message, onRetry) {
     const err = document.createElement('div');
     err.className = 'azy-error-message';
-    err.textContent = message;
+    const textSpan = document.createElement('span');
+    textSpan.textContent = message;
+    err.appendChild(textSpan);
+    if (onRetry) {
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'azy-retry-btn';
+      retryBtn.setAttribute('aria-label', 'Retry');
+      retryBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>';
+      retryBtn.addEventListener('click', () => {
+        err.remove();
+        onRetry();
+      });
+      err.appendChild(retryBtn);
+    }
     chatContent.appendChild(err);
     chatContent.scrollTop = chatContent.scrollHeight;
   }
 
   let conversationHistory = [];
+  let lastUserMessage = null;
 
   const COMMANDS = {
     clear: {
@@ -344,41 +358,8 @@ function createChatPanel(floatingButton) {
     }
   });
 
-  inputForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const query = inputField.value.trim();
-    if (!query) return;
-
-    hideCommandPalette();
-
-    if (query.startsWith('/')) {
-      const cmdName = query.slice(1).trim().toLowerCase();
-      if (COMMANDS[cmdName]) {
-        COMMANDS[cmdName].handler();
-        inputField.value = '';
-        return;
-      }
-      showError(`Unknown command: ${cmdName}`);
-      inputField.value = '';
-      return;
-    }
-
-    inputField.value = '';
-    addMessage(query, 'user');
-
-    if (conversationHistory.length === 0) {
-      const transcript = await getTranscriptForVideo();
-      if (!transcript) {
-        showError('This video doesn\'t have a transcript available.');
-        return;
-      }
-      conversationHistory.push({
-        role: 'system',
-        content: 'You are Azy, a video summarization and Q&A assistant. You help users understand YouTube videos by answering questions based on the provided transcript. Be concise, helpful, and reference timestamps when relevant.\n\nVideo transcript:\n' + transcript,
-      });
-    }
-
-    conversationHistory.push({ role: 'user', content: query });
+  async function sendToAPI(retryCount) {
+    if (conversationHistory.length === 0) return;
 
     let settings;
     try {
@@ -386,7 +367,8 @@ function createChatPanel(floatingButton) {
       settings = stored.azy_settings || {};
     } catch (e) {
       console.error('Azy: failed to load settings', e);
-      settings = {};
+      showError('Failed to load settings. Try refreshing the page.');
+      return;
     }
 
     if (!settings.apiKey) {
@@ -422,7 +404,8 @@ function createChatPanel(floatingButton) {
           'server_error': 'The AI service encountered an error. Try again.',
           'network_error': 'Connection failed. Check your internet.',
         };
-        showError(messages[response.error] || response.message || 'An unexpected error occurred.');
+        const errorMsg = messages[response.error] || response.message || 'An unexpected error occurred.';
+        showError(errorMsg, () => sendToAPI((retryCount || 0) + 1));
       } else {
         addMessage(response.data, 'azy');
         conversationHistory.push({ role: 'assistant', content: response.data });
@@ -430,8 +413,48 @@ function createChatPanel(floatingButton) {
     } catch (e) {
       removeLoading();
       console.error('Azy: message send failed', e);
-      showError('Connection failed. Check your internet.');
+      showError('Connection failed. Check your internet.', () => sendToAPI((retryCount || 0) + 1));
     }
+  }
+
+  inputForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const query = inputField.value.trim();
+    if (!query) return;
+
+    hideCommandPalette();
+
+    if (query.startsWith('/')) {
+      const cmdName = query.slice(1).trim().toLowerCase();
+      if (COMMANDS[cmdName]) {
+        COMMANDS[cmdName].handler();
+        inputField.value = '';
+        return;
+      }
+      showError(`Unknown command: ${cmdName}`);
+      inputField.value = '';
+      return;
+    }
+
+    inputField.value = '';
+    lastUserMessage = query;
+    addMessage(query, 'user');
+
+    if (conversationHistory.length === 0) {
+      const transcript = await getTranscriptForVideo();
+      if (!transcript) {
+        showError('This video doesn\'t have a transcript available.');
+        return;
+      }
+      conversationHistory.push({
+        role: 'system',
+        content: 'You are Azy, a video summarization and Q&A assistant. You help users understand YouTube videos by answering questions based on the provided transcript. Be concise, helpful, and reference timestamps when relevant.\n\nVideo transcript:\n' + transcript,
+      });
+    }
+
+    conversationHistory.push({ role: 'user', content: query });
+
+    await sendToAPI(0);
   });
 
   const suggestionBtn = panel.querySelector('.azy-suggestion-btn');
