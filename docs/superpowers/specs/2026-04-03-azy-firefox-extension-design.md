@@ -70,7 +70,7 @@ Communication via `browser.runtime.sendMessage` / `browser.runtime.onMessage`. S
    {
      "model": settings.modelName,
      "messages": [
-       { "role": "system", "content": "You are Azy, a video summarization assistant..." },
+       { "role": "system", "content": "You are Azy, a video summarization and Q&A assistant. You help users understand YouTube videos by answering questions based on the provided transcript. Be concise, helpful, and reference timestamps when relevant." },
        { "role": "user", "content": "<transcript>\n\nQuestion: <query>" }
      ]
    }

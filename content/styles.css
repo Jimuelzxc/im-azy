@@ -1,0 +1,556 @@
+:root {
+  --azy-bg-panel: #1e1e1e;
+  --azy-bg-header: #292929;
+  --azy-border-subtle: rgba(255, 255, 255, 0.04);
+  --azy-border-btn: rgba(255, 255, 255, 0.5);
+  --azy-text-primary: #ffffff;
+  --azy-text-secondary: rgba(255, 255, 255, 0.57);
+  --azy-accent-purple: #d07cf0;
+  --azy-accent-purple-dark: #b15fd0;
+  --azy-bg-icon-placeholder: #2c2c2c;
+  --azy-bg-btn-placeholder: #252525;
+  --azy-font-main: 'Roboto Mono', monospace;
+  --azy-font-mono: 'JetBrains Mono', monospace;
+  --azy-btn-bg: #272727;
+  --azy-btn-bg-hover: #333333;
+}
+
+/* Floating Button */
+.azy-floating-button {
+  all: unset;
+  box-sizing: border-box;
+  background: var(--azy-btn-bg);
+  border-radius: 16px;
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 16px 0 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483646;
+  font-family: var(--azy-font-main);
+}
+
+.azy-floating-button:hover {
+  background: var(--azy-btn-bg-hover);
+}
+
+.azy-floating-button:active {
+  transform: scale(0.97);
+}
+
+.azy-floating-button .azy-icon {
+  color: var(--azy-accent-purple);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(2px);
+}
+
+.azy-floating-button .azy-button-text {
+  color: #fff;
+  letter-spacing: -0.5px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.azy-floating-button.azy-hidden {
+  display: none;
+}
+
+/* Chat Panel */
+.azy-chat-panel {
+  box-sizing: border-box;
+  background: var(--azy-bg-panel);
+  border: 1px solid var(--azy-border-subtle);
+  width: 320px;
+  height: 500px;
+  min-width: 280px;
+  min-height: 300px;
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--azy-font-main);
+  position: fixed;
+  bottom: 70px;
+  right: 24px;
+  z-index: 2147483647;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.azy-chat-panel.azy-hidden {
+  display: none;
+}
+
+.azy-chat-header {
+  background: var(--azy-bg-header);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.azy-chat-header:active {
+  cursor: grabbing;
+}
+
+.azy-chat-header h2 {
+  color: var(--azy-accent-purple);
+  letter-spacing: -0.32px;
+  font-size: 11px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.azy-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--azy-text-primary);
+}
+
+.azy-close-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+  transition: opacity 0.2s;
+}
+
+.azy-close-btn:hover {
+  opacity: 0.7;
+}
+
+.azy-chat-content {
+  flex-grow: 1;
+  padding: 24px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.azy-greeting-message {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 90%;
+}
+
+.azy-greeting-icon {
+  background: var(--azy-bg-icon-placeholder);
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+}
+
+.azy-greeting-text {
+  color: var(--azy-text-primary);
+  letter-spacing: -0.32px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.azy-suggestion-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.azy-suggestion-btn {
+  background: transparent;
+  border: 1px solid var(--azy-border-btn);
+  color: var(--azy-text-primary);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  letter-spacing: -0.24px;
+}
+
+.azy-suggestion-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--azy-text-primary);
+}
+
+/* Messages */
+.azy-message {
+  max-width: 90%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: -0.24px;
+}
+
+.azy-message-user {
+  align-self: flex-end;
+  background: var(--azy-accent-purple-dark);
+  color: var(--azy-text-primary);
+}
+
+.azy-message-azy {
+  align-self: flex-start;
+  background: var(--azy-bg-header);
+  color: var(--azy-text-primary);
+}
+
+.azy-message-azy p {
+  margin: 0 0 8px 0;
+}
+
+.azy-message-azy p:last-child {
+  margin-bottom: 0;
+}
+
+.azy-message-azy strong {
+  color: var(--azy-accent-purple);
+}
+
+.azy-message-azy code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: var(--azy-font-mono);
+  font-size: 10px;
+}
+
+.azy-message-azy pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.azy-message-azy pre code {
+  background: none;
+  padding: 0;
+}
+
+.azy-message-azy ul,
+.azy-message-azy ol {
+  margin: 4px 0;
+  padding-left: 16px;
+}
+
+.azy-message-azy li {
+  margin: 2px 0;
+}
+
+.azy-message-azy a {
+  color: var(--azy-accent-purple);
+  text-decoration: underline;
+}
+
+/* Loading */
+.azy-loading {
+  align-self: flex-start;
+  color: var(--azy-text-secondary);
+  font-size: 11px;
+  padding: 8px 12px;
+  animation: azy-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes azy-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Input */
+.azy-chat-input-wrapper {
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+.azy-chat-input-form {
+  box-sizing: border-box;
+  border: 1px solid var(--azy-border-btn);
+  border-radius: 4px;
+  background: var(--azy-bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 12px;
+  transition: border-color 0.2s;
+}
+
+.azy-chat-input-form:focus-within {
+  border-color: var(--azy-accent-purple);
+}
+
+.azy-input-top-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.azy-ai-sparkle {
+  color: var(--azy-accent-purple-dark);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.azy-chat-input-form input {
+  background: transparent;
+  border: none;
+  color: var(--azy-text-primary);
+  font-family: inherit;
+  font-size: 11px;
+  flex-grow: 1;
+  padding: 0;
+  outline: none;
+}
+
+.azy-chat-input-form input::placeholder {
+  color: var(--azy-text-secondary);
+}
+
+.azy-input-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.azy-send-btn {
+  background: none;
+  border: none;
+  color: var(--azy-accent-purple-dark);
+  font-family: var(--azy-font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.azy-send-btn:hover {
+  color: var(--azy-accent-purple);
+}
+
+.azy-send-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.azy-settings-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(208, 208, 208, 0.7);
+}
+
+.azy-settings-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.5;
+  transition: color 0.2s;
+}
+
+.azy-settings-btn:hover {
+  color: var(--azy-text-primary);
+}
+
+/* Resize Handle */
+.azy-resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  z-index: 1;
+}
+
+.azy-resize-handle::before {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--azy-text-secondary);
+  border-bottom: 2px solid var(--azy-text-secondary);
+  border-radius: 0 0 2px 0;
+}
+
+/* Settings Panel */
+.azy-settings-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--azy-bg-panel);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+.azy-settings-panel.azy-hidden {
+  display: none;
+}
+
+.azy-settings-header {
+  background: var(--azy-bg-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.azy-icon-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.azy-icon-btn:hover {
+  color: #ffffff;
+}
+
+.azy-settings-title {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.32px;
+}
+
+.azy-settings-tabs {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.azy-tab {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--azy-font-main);
+  font-size: 13px;
+  padding: 12px 0;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.azy-tab:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.azy-tab.azy-active {
+  color: #ffffff;
+}
+
+.azy-tab.azy-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--azy-accent-purple-dark);
+}
+
+.azy-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 20px 24px;
+  overflow-y: auto;
+}
+
+.azy-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.azy-form-group label {
+  font-size: 12px;
+  color: #ffffff;
+  letter-spacing: -0.32px;
+}
+
+.azy-form-group input,
+.azy-form-group textarea {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-family: var(--azy-font-main);
+  font-size: 12px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.azy-form-group input:focus,
+.azy-form-group textarea:focus {
+  border-color: var(--azy-accent-purple-dark);
+}
+
+.azy-form-group input::placeholder,
+.azy-form-group textarea::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: -0.24px;
+}
+
+.azy-form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Error message */
+.azy-error-message {
+  color: #ff6b6b;
+  font-size: 11px;
+  padding: 8px 12px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 4px;
+  align-self: flex-start;
+  max-width: 90%;
+}

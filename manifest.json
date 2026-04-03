@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Azy",
+  "version": "1.0.0",
+  "description": "AI-powered YouTube video summarization and Q&A assistant",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": [
+        "content/transcript.js",
+        "content/markdown.js",
+        "content/ui/floating-button.js",
+        "content/ui/settings-panel.js",
+        "content/ui/chat-panel.js",
+        "content/content.js"
+      ],
+      "css": ["content/styles.css"]
+    }
+  ],
+  "icons": {}
+}
