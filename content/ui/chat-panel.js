@@ -14,7 +14,7 @@ function createChatPanel(floatingButton) {
     </header>
     <main class="azy-chat-content">
       <div class="azy-greeting-message">
-        <div class="azy-greeting-icon" aria-hidden="true"></div>
+        <pre class="azy-ghost-ascii" aria-hidden="true"></pre>
         <p class="azy-greeting-text">Hello! Curious about what you're watching? I'm here to help.</p>
         <div class="azy-suggestion-buttons">
           <button class="azy-suggestion-btn" data-suggestion="summarize the video">summarize the video</button>
@@ -25,7 +25,7 @@ function createChatPanel(floatingButton) {
       <form class="azy-chat-input-form">
         <div class="azy-input-top-row">
           <span class="azy-ai-sparkle" aria-hidden="true">*</span>
-          <input type="text" placeholder="ask a question..." aria-label="Ask a question" autocomplete="off">
+          <textarea placeholder="ask a question..." aria-label="Ask a question" autocomplete="off" rows="1"></textarea>
         </div>
         <div class="azy-input-bottom-row">
           <button type="button" class="azy-settings-btn" aria-label="Settings">
@@ -45,12 +45,35 @@ function createChatPanel(floatingButton) {
 
   const chatContent = panel.querySelector('.azy-chat-content');
   const inputForm = panel.querySelector('.azy-chat-input-form');
-  const inputField = panel.querySelector('input');
+  const inputField = panel.querySelector('textarea');
   const closeBtn = panel.querySelector('.azy-close-btn');
   const settingsBtn = panel.querySelector('.azy-settings-btn');
   const header = panel.querySelector('.azy-chat-header');
   const resizeHandle = panel.querySelector('.azy-resize-handle');
   const greetingSection = panel.querySelector('.azy-greeting-message');
+  const ghostAscii = panel.querySelector('.azy-ghost-ascii');
+
+  // Auto-expand textarea
+  inputField.addEventListener('input', () => {
+    inputField.style.height = 'auto';
+    inputField.style.height = Math.min(inputField.scrollHeight, 120) + 'px';
+  });
+
+  // ASCII ghost animation
+  const ghostFrames = [
+    '  .-"""-. \n /       \\\n|  O   O  |\n|    ^    |\n \\  \'-\'  / \n  \'-----\'  ',
+    '  .-"""-. \n /       \\\n|  O   O  |\n|    ^    |\n \\  \'-\'  / \n  \'--=--\'  ',
+    '  .-"""-. \n /       \\\n|  O   O  |\n|    ^    |\n \\  \'-\'  / \n  \'-----\'  ',
+    '  .-"""-. \n /       \\\n|  -   -  |\n|    ^    |\n \\  \'-\'  / \n  \'--=--\'  ',
+  ];
+  let ghostFrame = 0;
+  if (ghostAscii) {
+    ghostAscii.textContent = ghostFrames[0];
+    setInterval(() => {
+      ghostFrame = (ghostFrame + 1) % ghostFrames.length;
+      ghostAscii.textContent = ghostFrames[ghostFrame];
+    }, 800);
+  }
 
   const settingsPanel = createSettingsPanel(panel);
   window.azySettingsPanel = settingsPanel;
@@ -348,11 +371,15 @@ function createChatPanel(floatingButton) {
         if (cmdName && COMMANDS[cmdName]) {
           COMMANDS[cmdName].handler();
           inputField.value = '';
+          inputField.style.height = 'auto';
           hideCommandPalette();
         }
       } else if (e.key === 'Escape') {
         hideCommandPalette();
       }
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      inputForm.dispatchEvent(new Event('submit', { cancelable: true }));
     } else if (e.key === 'Escape') {
       hideCommandPalette();
     }
